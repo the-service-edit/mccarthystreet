@@ -73,12 +73,12 @@ main .wrap{display:grid;gap:56px;padding-block:40px 64px}
 .rhead .when{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
 .room.other .rhead{border-color:var(--need-line)}
 .rgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;align-items:start}
-@media (max-width:860px){.rgrid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){.rgrid{grid-template-columns:minmax(0,1fr)}.slide{aspect-ratio:4/5}}
 .viewer{display:grid;gap:12px;min-width:0}
 .stage{position:relative;border-radius:18px;overflow:hidden;background:#0c1813}
 .track{display:grid;grid-auto-flow:column;grid-auto-columns:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
 .track::-webkit-scrollbar{display:none}
-.slide{scroll-snap-align:center;aspect-ratio:4/3;position:relative;border:0;padding:0;background:#0c1813;cursor:zoom-in;display:block;width:100%}
+.slide{scroll-snap-align:center;aspect-ratio:4/3;max-height:78vh;width:100%;position:relative;border:0;padding:0;background:#0c1813;cursor:zoom-in;display:block;width:100%}
 .slide img{width:100%;height:100%;object-fit:contain;display:block}
 .nopv{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;color:#cfdcd5;font-size:14px}
 .playtag{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.92);color:var(--green);font-weight:800;font-size:14px;padding:10px 16px;border-radius:999px}
@@ -133,10 +133,17 @@ footer strong{color:var(--on-green)}
 .lbtop{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;gap:12px}
 .lbtop span{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
 .lbx{background:rgba(255,255,255,.14);border:0;border-radius:999px;padding:8px 16px;font-weight:700;color:#fff;cursor:pointer}
-.lbtrack{display:grid;grid-auto-flow:column;grid-auto-columns:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;min-height:0}
+.lbtrack{display:grid;grid-auto-flow:column;grid-auto-columns:100%;grid-template-rows:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;min-height:0}
 .lbtrack::-webkit-scrollbar{display:none}
-.lbs{scroll-snap-align:center;display:grid;place-items:center;padding:0 12px;min-height:0}
-.lbs img,.lbs video{max-width:100%;max-height:100%;object-fit:contain}
+.lbs{scroll-snap-align:center;display:flex;align-items:center;justify-content:center;height:100%;min-height:0;overflow:hidden;position:relative;touch-action:pan-x;padding:0 12px}
+.lbs.zoomed{touch-action:none;cursor:grab}
+.lbs img,.lbs video{max-width:100%;max-height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+.lbs img{transform-origin:0 0;will-change:transform;cursor:zoom-in}
+.lbs.zoomed img{cursor:grab}
+.lbtrack.locked{overflow:hidden}
+.zbar{position:absolute;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);display:flex;gap:6px;z-index:2}
+.zbar button{width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:20px;font-weight:700;cursor:pointer}
+.zhint{font-size:12.5px;color:#a8b9b0}
 .lbcap{padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 18px);max-width:720px;margin:0 auto;width:100%;display:grid;gap:4px}
 .lbcap p{margin:0}
 .lbcap .stamp{color:#a8b9b0}
@@ -170,16 +177,17 @@ footer strong{color:var(--on-green)}
 </section>
 
 <nav class="nav" aria-label="Rooms"><div class="wrap" id="nav"></div></nav>
-<main><div class="wrap" id="rooms"><p class="loading">Loading photosâ€¦</p></div></main>
+<main><div class="wrap" id="rooms"><p class="loading">Loading photos…</p></div></main>
 <footer><div class="wrap">
-  <p><strong>About this record.</strong> Captions describe each area as found at the start of the tenancy. "Needs cleaning" marks areas that were not reasonably clean; "Damage / repair" marks existing defects; "General condition" records the overall state.</p>
+  <p><strong>About this record.</strong> Captions describe each area as found at the start of the tenancy. "Not clean at handover" marks areas that were not reasonably clean when the property was handed over and had to be cleaned; "Damage / repair" marks existing defects; "General condition" records the overall state.</p>
   <p>The original photo and video files, with their capture data, were supplied with the covering email.</p>
 </div></footer>
 
 <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Full-screen viewer">
   <div class="lbtop"><span id="lbCount"></span><button class="lbx" id="lbClose" type="button">Close</button></div>
   <div class="lbtrack" id="lbTrack"></div>
-  <div class="lbcap"><p id="lbText"></p><span class="stamp" id="lbStamp"></span></div>
+  <div class="lbcap"><p id="lbText"></p><span class="stamp" id="lbStamp"></span><span class="zhint" id="zhint">Pinch, double-tap or scroll to zoom. Drag to move around.</span></div>
+  <div class="zbar"><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zin" aria-label="Zoom in">+</button></div>
 </div>
 
 <script>
@@ -187,7 +195,7 @@ const SB="https://rxwjactnfsrakpagbiit.supabase.co";
 const KEY="sb_publishable_G97KoWEPj9kSSf92fROYgQ_AmbtXeeK";
 const BUCKET=`${SB}/storage/v1/object/public/mccarthy-street/`;
 const FN=`${SB}/functions/v1/mccarthy-edit`;
-const TAGS={clean:"Needs cleaning",repair:"Damage / repair",record:"General condition"};
+const TAGS={clean:"Not clean at handover",repair:"Damage / repair",record:"General condition"};
 const OTHER="Other areas";
 
 let ROOMS=[],PHOTOS=[],editKey=null,showGone=false;
@@ -195,6 +203,7 @@ const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 const fmt=s=>{if(!s)return"Date not recorded";const d=new Date(s);if(isNaN(d))return"Date not recorded";return d.toLocaleDateString("en-AU",{day:"numeric",month:"short",year:"numeric",timeZone:"Australia/Perth"})+", "+d.toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit",timeZone:"Australia/Perth"})};
 const url=p=>p?BUCKET+p.split("/").map(encodeURIComponent).join("/"):"";
+const fullOf=p=>p.path.startsWith("uploads/")?url(p.path):url("full_"+p.path);
 const thumbOf=p=>p.is_video?(p.poster?url(p.poster):""):url(p.path);
 const status=(t,k)=>{const s=document.getElementById("status");s.textContent=t;s.className="status "+(k||"")};
 const svg={
@@ -226,7 +235,7 @@ const viewers=[];
 function render(){
  const live=PHOTOS.filter(p=>!p.removed),c=k=>live.filter(p=>p.tag===k).length;
  const roomsUsed=new Set(live.map(p=>p.room).filter(Boolean)).size;
- document.getElementById("totals").innerHTML=`<div><b>${live.length}</b><span>Photos &amp; videos</span></div><div><b>${c("clean")}</b><span>Needs cleaning</span></div><div><b>${c("repair")}</b><span>Damage / repair</span></div><div><b>${roomsUsed}</b><span>Rooms</span></div>`;
+ document.getElementById("totals").innerHTML=`<div><b>${live.length}</b><span>Photos &amp; videos</span></div><div><b>${c("clean")}</b><span>Not clean at handover</span></div><div><b>${c("repair")}</b><span>Damage / repair</span></div><div><b>${roomsUsed}</b><span>Rooms</span></div>`;
  const gs=groups();
  document.getElementById("nav").innerHTML=gs.map(g=>`<a href="#${slug(g.name)}" data-slug="${slug(g.name)}"${g.other?' class="need"':""}>${esc(g.name)}<small>${g.items.length}</small></a>`).join("");
  const host=document.getElementById("rooms");host.innerHTML="";viewers.length=0;
@@ -255,7 +264,7 @@ function roomSection(g){
    <div class="thumbs">${items.map((p,k)=>`<button type="button" data-k="${k}" aria-label="Show item ${k+1}">${thumbOf(p)?`<img src="${thumbOf(p)}" alt="" loading="lazy">`:""}${p.is_video?'<span class="v">VIDEO</span>':""}</button>`).join("")}</div>
   </div>
   <div class="notes">
-   <div class="stats"><div><b>${items.filter(p=>!p.removed).length}</b><span>Items</span></div><div><b>${n("clean")}</b><span>To clean</span></div><div><b>${n("repair")}</b><span>Damage</span></div><div><b>${vids}</b><span>Videos</span></div></div>
+   <div class="stats"><div><b>${items.filter(p=>!p.removed).length}</b><span>Items</span></div><div><b>${n("clean")}</b><span>Not clean</span></div><div><b>${n("repair")}</b><span>Damage</span></div><div><b>${vids}</b><span>Videos</span></div></div>
    ${editKey&&!g.other?`<div class="note"><h3>Room summary</h3><textarea data-note="${esc(g.name)}" placeholder="Optional: a short summary of this room for the agent">${esc(g.note)}</textarea></div>`:(g.note?`<div class="note"><h3>Summary</h3><p>${esc(g.note)}</p></div>`:"")}
    <div><h3>Everything recorded</h3><ul class="items">${items.map((p,k)=>`<li class="it${p.removed?" gone":""}" data-id="${esc(p.id)}" data-k="${k}">
      <button type="button" data-go="${k}">${thumbOf(p)?`<img src="${thumbOf(p)}" alt="" loading="lazy">`:"<img alt=\"\">"}<span class="tx"><p>${esc(p.caption||"No caption yet")}</p><span class="line"><span class="chip ${p.tag}">${TAGS[p.tag]}</span><span class="stamp">${fmt(p.taken_at)}</span></span></span></button>
@@ -296,16 +305,45 @@ function observeNav(){
 /* Full-screen viewer */
 const lb=document.getElementById("lb"),lt=document.getElementById("lbTrack");let lItems=[],lName="",lk=0;
 function openLb(name,items,k){lName=name;lItems=items;
- lt.innerHTML=items.map(p=>`<div class="lbs">${p.is_video?`<video src="${url(p.path)}" ${p.poster?`poster="${url(p.poster)}"`:""} controls playsinline preload="none"></video>`:`<img src="${url(p.path)}" alt="${esc(p.caption)}" loading="lazy" onerror="${noPreview}">`}</div>`).join("");
+ lt.innerHTML=items.map(p=>`<div class="lbs">${p.is_video?`<video src="${url(p.path)}" ${p.poster?`poster="${url(p.poster)}"`:""} controls playsinline preload="none"></video>`:`<img src="${fullOf(p)}" data-fallback="${url(p.path)}" alt="${esc(p.caption)}" loading="lazy" draggable="false" onerror="if(this.dataset.fallback&&this.src!==this.dataset.fallback){this.src=this.dataset.fallback}else{${noPreview}}">`}</div>`).join("");
  lb.hidden=false;document.body.style.overflow="hidden";requestAnimationFrame(()=>{lt.scrollLeft=k*lt.clientWidth;lbShow(k)});document.getElementById("lbClose").focus()}
-function lbShow(k){lk=k;lt.querySelectorAll("video").forEach(v=>v.pause());const p=lItems[k];if(!p)return;
- document.getElementById("lbCount").textContent=`${lName} Â· ${k+1} / ${lItems.length}`;
+function lbShow(k){if(k!==lk)resetZoom();lk=k;lt.querySelectorAll("video").forEach(v=>v.pause());const p=lItems[k];if(!p)return;
+ document.getElementById("lbCount").textContent=`${lName} · ${k+1} / ${lItems.length}`;
  document.getElementById("lbText").textContent=p.caption||"";document.getElementById("lbStamp").textContent=fmt(p.taken_at)}
-function closeLb(){lt.querySelectorAll("video").forEach(v=>v.pause());lb.hidden=true;document.body.style.overflow="";const v=viewers.find(v=>v.name===lName);v&&v.sync(lk)}
+function closeLb(){resetZoom();lt.querySelectorAll("video").forEach(v=>v.pause());lb.hidden=true;document.body.style.overflow="";const v=viewers.find(v=>v.name===lName);v&&v.sync(lk)}
 lt.addEventListener("scroll",()=>{const k=Math.round(lt.scrollLeft/lt.clientWidth);if(k!==lk)lbShow(k)},{passive:true});
 document.getElementById("lbClose").onclick=closeLb;
 addEventListener("keydown",e=>{if(lb.hidden)return;if(e.key==="Escape")closeLb();
  if(e.key==="ArrowRight"||e.key==="ArrowLeft"){const k=Math.max(0,Math.min(lItems.length-1,lk+(e.key==="ArrowRight"?1:-1)));lt.scrollTo({left:k*lt.clientWidth,behavior:"smooth"})}});
+
+
+/* Zoom in the full-screen viewer: pinch, double-tap/double-click, wheel, +/- buttons; drag to pan */
+const Z={s:1,x:0,y:0,img:null,slide:null};
+function curSlide(){return lt.children[lk]}
+function apply(){if(!Z.img)return;Z.img.style.transform=`translate(${Z.x}px,${Z.y}px) scale(${Z.s})`;
+ const on=Z.s>1.01;Z.slide.classList.toggle("zoomed",on);lt.classList.toggle("locked",on)}
+function bind(){const sl=curSlide();const img=sl&&sl.querySelector("img");if(img!==Z.img){if(Z.img)Z.img.style.transform="";Z.img=img;Z.slide=sl;Z.s=1;Z.x=0;Z.y=0}return !!img}
+function clamp(){const w=Z.img.offsetWidth,h=Z.img.offsetHeight,sw=w*Z.s,sh=h*Z.s;
+ Z.x=Math.min(0,Math.max(w-sw,Z.x));Z.y=Math.min(0,Math.max(h-sh,Z.y));if(Z.s<=1){Z.s=1;Z.x=0;Z.y=0}}
+function zoomAt(ns,cx,cy){if(!bind())return;const r=Z.img.getBoundingClientRect();ns=Math.max(1,Math.min(6,ns));
+ const ix=(cx-r.left)/Z.s,iy=(cy-r.top)/Z.s; // the point under the cursor, in unzoomed image pixels
+ const left0=r.left-Z.x,top0=r.top-Z.y;Z.x=cx-left0-ix*ns;Z.y=cy-top0-iy*ns;Z.s=ns;clamp();apply()}
+function resetZoom(){if(Z.img){Z.s=1;Z.x=0;Z.y=0;Z.img.style.transform="";Z.slide&&Z.slide.classList.remove("zoomed")}lt.classList.remove("locked");Z.img=null;Z.slide=null}
+const centre=()=>{const sl=curSlide();const r=sl.getBoundingClientRect();return[r.left+r.width/2,r.top+r.height/2]};
+document.getElementById("zin").onclick=()=>{bind();zoomAt(Z.s*1.6,...centre())};
+document.getElementById("zout").onclick=()=>{bind();zoomAt(Z.s/1.6,...centre())};
+lt.addEventListener("dblclick",e=>{if(!e.target.closest("img"))return;bind();zoomAt(Z.s>1.01?1:2.5,e.clientX,e.clientY)});
+lt.addEventListener("wheel",e=>{if(!e.target.closest("img"))return;e.preventDefault();bind();zoomAt(Z.s*Math.exp(-e.deltaY*0.0025),e.clientX,e.clientY)},{passive:false});
+const pts=new Map();let pinch=null,pan=null,lastTap=0;
+lt.addEventListener("pointerdown",e=>{if(!e.target.closest("img"))return;bind();pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),s:Z.s};pan=null}
+ else if(pts.size===1){if(e.pointerType==="touch"){const now=Date.now();if(now-lastTap<300){zoomAt(Z.s>1.01?1:2.5,e.clientX,e.clientY);lastTap=0;return}lastTap=now}
+  if(Z.s>1.01){pan={x:e.clientX,y:e.clientY,ox:Z.x,oy:Z.y};e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId)}}});
+lt.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(pinch&&pts.size===2){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);zoomAt(pinch.s*d/pinch.d,(a.x+b.x)/2,(a.y+b.y)/2);e.preventDefault()}
+ else if(pan){Z.x=pan.ox+(e.clientX-pan.x);Z.y=pan.oy+(e.clientY-pan.y);clamp();apply();e.preventDefault()}},{passive:false});
+const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)pan=null};
+lt.addEventListener("pointerup",up);lt.addEventListener("pointercancel",up);
 
 /* ---------- Editing ---------- */
 const rerender=()=>{const y=scrollY;render();scrollTo(0,y)};
@@ -335,9 +373,9 @@ async function exifDate(file){
     const m2=s.match(/(\d{4}):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/);return m2?`${m2[1]}-${m2[2]}-${m2[3]}T${m2[4]}:${m2[5]}:${m2[6]}+08:00`:null}
    o+=2+len}}catch(e){}return null}
 async function shrink(file){
- try{const bmp=await createImageBitmap(file);const s=Math.min(1,2000/Math.max(bmp.width,bmp.height));
+ try{const bmp=await createImageBitmap(file);const s=Math.min(1,3200/Math.max(bmp.width,bmp.height));
   const c=document.createElement("canvas");c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
-  return await new Promise(r=>c.toBlob(b=>r(b),"image/jpeg",.85))}catch(e){return null}}
+  return await new Promise(r=>c.toBlob(b=>r(b),"image/jpeg",.88))}catch(e){return null}}
 async function posterFor(file){
  return new Promise(res=>{const v=document.createElement("video");v.muted=true;v.playsInline=true;v.preload="auto";const u=URL.createObjectURL(file);v.src=u;
   const done=b=>{URL.revokeObjectURL(u);res(b)};const t=setTimeout(()=>done(null),8000);
@@ -352,7 +390,7 @@ document.getElementById("upfile").addEventListener("change",async e=>{
  const files=[...e.target.files];e.target.value="";if(!files.length)return;
  const room=document.getElementById("uproom").value||null;let ok=0;const failed=[];
  for(const [i,f] of files.entries()){
-  status(`Uploading ${i+1} of ${files.length}â€¦`);
+  status(`Uploading ${i+1} of ${files.length}…`);
   try{
    const base=f.name.replace(/\.[^.]+$/,""),ext=(f.name.split(".").pop()||"").toLowerCase();
    const isVideo=f.type.startsWith("video")||["mov","mp4","m4v"].includes(ext);
