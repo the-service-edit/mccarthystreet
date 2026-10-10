@@ -72,58 +72,42 @@ main .wrap{display:grid;gap:56px;padding-block:40px 64px}
 .rhead h2{margin:0;font-size:clamp(24px,3.4vw,32px);line-height:1.15;font-weight:800;letter-spacing:-.01em}
 .rhead .when{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
 .room.other .rhead{border-color:var(--need-line)}
-.rgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:28px;align-items:start}
-@media (max-width:860px){.rgrid{grid-template-columns:minmax(0,1fr)}.slide{aspect-ratio:4/5}}
-.viewer{display:grid;gap:12px;min-width:0}
-.stage{position:relative;border-radius:18px;overflow:hidden;background:#0c1813}
-.track{display:grid;grid-auto-flow:column;grid-auto-columns:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
-.track::-webkit-scrollbar{display:none}
-.slide{scroll-snap-align:center;aspect-ratio:4/3;max-height:78vh;width:100%;position:relative;border:0;padding:0;background:#0c1813;cursor:zoom-in;display:block;width:100%}
-.slide img{width:100%;height:100%;object-fit:contain;display:block}
 .nopv{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;color:#cfdcd5;font-size:14px}
 .playtag{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.92);color:var(--green);font-weight:800;font-size:14px;padding:10px 16px;border-radius:999px}
-.arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.9);display:grid;place-items:center;cursor:pointer;z-index:2}
-.arrow.prev{left:12px}.arrow.next{right:12px}
-.arrow:disabled{opacity:.35;cursor:default}
-.ctr{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.55);color:#fff;font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:999px;font-variant-numeric:tabular-nums;z-index:2}
-.full{position:absolute;right:12px;top:12px;z-index:2;border:0;background:rgba(255,255,255,.9);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
-.cap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;display:grid;gap:6px}
-.cap p{margin:0;font-weight:600}
 .line{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:space-between;align-items:center}
 .stamp{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .chip{display:inline-flex;font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap}
 .chip.clean{background:var(--clean-bg);color:var(--clean-fg)}
 .chip.repair{background:var(--repair-bg);color:var(--repair-fg)}
 .chip.record{background:var(--record-bg);color:var(--record-fg)}
-.thumbs{display:grid;grid-auto-flow:column;grid-auto-columns:72px;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
-.thumbs button{border:2px solid transparent;border-radius:10px;padding:0;overflow:hidden;cursor:pointer;background:var(--line);position:relative;aspect-ratio:1}
-.thumbs button.on{border-color:var(--green)}
-.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
-.thumbs .v{position:absolute;inset:auto 4px 4px auto;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:800;padding:1px 5px;border-radius:4px}
 .notes{display:grid;gap:18px;min-width:0}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .stats div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .stats b{display:block;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
 .stats span{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.notes h3{margin:0 0 6px;font-size:16px;font-weight:800}
+.note h3,.rtop h3{margin:0 0 6px;font-size:16px;font-weight:800}
 .note p{margin:0;color:var(--muted);max-width:60ch;white-space:pre-line}
-.items{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-.it{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:7px;display:grid;gap:8px}
-.it.on{border-color:var(--green);box-shadow:0 0 0 1px var(--green)}
-.it.gone{opacity:.55}
-.it>button{all:unset;cursor:pointer;display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center}
-.it>button:focus-visible{outline:3px solid #2e8b62;outline-offset:2px;border-radius:8px}
-.it img{width:52px;height:52px;object-fit:cover;border-radius:8px;display:block;background:var(--line)}
-.it .tx{display:grid;gap:3px;min-width:0}
-.it p{margin:0;font-size:14px;line-height:1.35}
 .ed{display:grid;gap:8px;padding:2px 2px 4px}
 .ed .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .ed label{display:grid;gap:3px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.ed select,.ed textarea,.notes textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--page);font-size:15px}
-.ed textarea,.notes textarea{resize:vertical;min-height:56px;line-height:1.35;text-transform:none;letter-spacing:0;font-weight:400}
+.ed select,.ed textarea,.note textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--page);font-size:15px}
+.ed textarea,.note textarea{resize:vertical;min-height:56px;line-height:1.35;text-transform:none;letter-spacing:0;font-weight:400}
 .rm{justify-self:start;border:1px solid var(--line);background:transparent;color:var(--warn);border-radius:9px;padding:6px 12px;font-weight:700;font-size:13px;cursor:pointer}
 .it.gone .rm{color:var(--ok)}
 
+
+.rtop{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px;align-items:start}
+@media (max-width:860px){.rtop{grid-template-columns:minmax(0,1fr)}}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;align-items:start}
+@media (max-width:420px){.cards{grid-template-columns:minmax(0,1fr)}}
+.it{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:grid}
+.it.gone{opacity:.5}
+.ph{all:unset;position:relative;display:block;aspect-ratio:3/4;background:#0c1813;cursor:zoom-in}
+.ph:focus-visible{outline:3px solid #2e8b62;outline-offset:-3px}
+.ph img{width:100%;height:100%;object-fit:contain;display:block}
+.zoomtag{position:absolute;right:10px;bottom:10px;display:inline-flex;gap:6px;align-items:center;background:rgba(255,255,255,.9);color:var(--ink);font-size:12.5px;font-weight:700;padding:5px 10px;border-radius:999px}
+.it .body{padding:12px 14px 14px;display:grid;gap:8px}
+.captext{margin:0;font-weight:600;font-size:15px;line-height:1.4}
 footer{background:var(--green);color:var(--on-green-muted);font-size:14px}
 footer .wrap{padding-block:28px 36px;display:grid;gap:8px}
 footer p{margin:0;max-width:70ch}
@@ -251,46 +235,23 @@ function roomSection(g){
  const head=`<div class="rhead"><h2>${esc(g.name)}${g.other&&editKey?" (needs a room)":""}</h2><span class="when">${dates.length?"Taken "+dates.join(", ")+" Oct 2026":""}</span></div>`;
  if(!items.length){sec.innerHTML=head+`<p class="stamp">No photos in this room yet. Choose it in the upload menu above to add some.</p>`;return sec}
  const roomOpts=k=>["",...ROOMS.map(r=>r.name)].map(r=>`<option value="${esc(r)}"${r===(k||"")?" selected":""}>${r?esc(r):"Choose room"}</option>`).join("");
- sec.innerHTML=head+`<div class="rgrid">
-  <div class="viewer">
-   <div class="stage">
-    <div class="track">${items.map((p,k)=>`<button class="slide" type="button" data-k="${k}" aria-label="View full screen: ${esc(p.caption||p.file)}">${thumbOf(p)?`<img src="${thumbOf(p)}" alt="${esc(p.caption)}" loading="lazy" onerror="${noPreview}">`:`<span class="nopv">Video</span>`}${p.is_video?`<span class="playtag">${svg.play} Play video</span>`:""}</button>`).join("")}</div>
-    <button class="arrow prev" type="button" aria-label="Previous photo">${svg.l}</button>
-    <button class="arrow next" type="button" aria-label="Next photo">${svg.r}</button>
-    <button class="full" type="button">${svg.exp} Full screen</button>
-    <span class="ctr"></span>
-   </div>
-   <div class="cap" aria-live="polite"></div>
-   <div class="thumbs">${items.map((p,k)=>`<button type="button" data-k="${k}" aria-label="Show item ${k+1}">${thumbOf(p)?`<img src="${thumbOf(p)}" alt="" loading="lazy">`:""}${p.is_video?'<span class="v">VIDEO</span>':""}</button>`).join("")}</div>
-  </div>
-  <div class="notes">
+ sec.innerHTML=head+`
+  <div class="rtop">
    <div class="stats"><div><b>${items.filter(p=>!p.removed).length}</b><span>Items</span></div><div><b>${n("clean")}</b><span>Not clean</span></div><div><b>${n("repair")}</b><span>Damage</span></div><div><b>${vids}</b><span>Videos</span></div></div>
    ${editKey&&!g.other?`<div class="note"><h3>Room summary</h3><textarea data-note="${esc(g.name)}" placeholder="Optional: a short summary of this room for the agent">${esc(g.note)}</textarea></div>`:(g.note?`<div class="note"><h3>Summary</h3><p>${esc(g.note)}</p></div>`:"")}
-   <div><h3>Everything recorded</h3><ul class="items">${items.map((p,k)=>`<li class="it${p.removed?" gone":""}" data-id="${esc(p.id)}" data-k="${k}">
-     <button type="button" data-go="${k}">${thumbOf(p)?`<img src="${thumbOf(p)}" alt="" loading="lazy">`:"<img alt=\"\">"}<span class="tx"><p>${esc(p.caption||"No caption yet")}</p><span class="line"><span class="chip ${p.tag}">${TAGS[p.tag]}</span><span class="stamp">${fmt(p.taken_at)}</span></span></span></button>
-     ${editKey?`<div class="ed">
-      <label>Caption<textarea data-f="caption" placeholder="What does this show?">${esc(p.caption)}</textarea></label>
-      <div class="two"><label>Room<select data-f="room">${roomOpts(p.room)}</select></label><label>Type<select data-f="tag">${Object.entries(TAGS).map(([k,v])=>`<option value="${k}"${k===p.tag?" selected":""}>${v}</option>`).join("")}</select></label></div>
-      <button class="rm" type="button" data-rm>${p.removed?"Restore to site":"Remove from site"}</button></div>`:""}
-   </li>`).join("")}</ul></div>
-  </div></div>`;
- const tr=sec.querySelector(".track"),cap=sec.querySelector(".cap"),ctr=sec.querySelector(".ctr"),prev=sec.querySelector(".prev"),next=sec.querySelector(".next");
- let cur=-1;
- const set=k=>{if(k===cur||!items[k])return;cur=k;const p=items[k];
-  ctr.textContent=`${k+1} / ${items.length}`;
-  cap.innerHTML=`<p>${esc(p.caption||"No caption yet")}</p><div class="line"><span class="chip ${p.tag}">${TAGS[p.tag]}</span><span class="stamp">${fmt(p.taken_at)}</span></div>`;
-  prev.disabled=k===0;next.disabled=k===items.length-1;
-  sec.querySelectorAll(".thumbs button,.it").forEach(b=>b.classList.toggle("on",+b.dataset.k===k));
-  const tb=sec.querySelector(`.thumbs button[data-k="${k}"]`),ts=sec.querySelector(".thumbs");if(tb)ts.scrollTo({left:tb.offsetLeft-ts.clientWidth/2+36,behavior:"smooth"})};
- const go=k=>{k=Math.max(0,Math.min(items.length-1,k));tr.scrollTo({left:k*tr.clientWidth,behavior:"smooth"});set(k)};
- tr.addEventListener("scroll",()=>set(Math.round(tr.scrollLeft/tr.clientWidth)),{passive:true});
- prev.onclick=()=>go(cur-1);next.onclick=()=>go(cur+1);
- sec.querySelector(".full").onclick=()=>openLb(g.name,items,cur);
- tr.querySelectorAll(".slide").forEach(b=>b.onclick=()=>openLb(g.name,items,+b.dataset.k));
- sec.querySelectorAll(".thumbs button").forEach(b=>b.onclick=()=>go(+b.dataset.k));
- sec.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{go(+b.dataset.go);if(innerWidth<=860)sec.querySelector(".stage").scrollIntoView({behavior:"smooth",block:"center"})});
- viewers.push({name:g.name,sync:k=>{tr.scrollLeft=k*tr.clientWidth;set(k)}});
- set(0);
+  </div>
+  <div class="cards">${items.map((p,k)=>`<article class="it${p.removed?" gone":""}" data-id="${esc(p.id)}">
+   <button class="ph" type="button" data-open="${k}" aria-label="View full screen: ${esc(p.caption||p.file)}">${thumbOf(p)?`<img src="${thumbOf(p)}" alt="${esc(p.caption)}" loading="lazy" onerror="${noPreview}">`:`<span class="nopv">Video</span>`}${p.is_video?`<span class="playtag">${svg.play} Play video</span>`:""}<span class="zoomtag">${svg.exp} View</span></button>
+   <div class="body">
+    <p class="captext">${esc(p.caption||"No caption yet")}</p>
+    <div class="line"><span class="chip ${p.tag}">${TAGS[p.tag]}</span><span class="stamp">${fmt(p.taken_at)}</span></div>
+    ${editKey?`<div class="ed">
+     <label>Caption<textarea data-f="caption" placeholder="What does this show?">${esc(p.caption)}</textarea></label>
+     <div class="two"><label>Room<select data-f="room">${roomOpts(p.room)}</select></label><label>Type<select data-f="tag">${Object.entries(TAGS).map(([k,v])=>`<option value="${k}"${k===p.tag?" selected":""}>${v}</option>`).join("")}</select></label></div>
+     <button class="rm" type="button" data-rm>${p.removed?"Restore to site":"Remove from site"}</button></div>`:""}
+   </div>
+  </article>`).join("")}</div>`;
+ sec.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openLb(g.name,items,+b.dataset.open));
  return sec;
 }
 
@@ -310,7 +271,7 @@ function openLb(name,items,k){lName=name;lItems=items;
 function lbShow(k){if(k!==lk)resetZoom();lk=k;lt.querySelectorAll("video").forEach(v=>v.pause());const p=lItems[k];if(!p)return;
  document.getElementById("lbCount").textContent=`${lName} · ${k+1} / ${lItems.length}`;
  document.getElementById("lbText").textContent=p.caption||"";document.getElementById("lbStamp").textContent=fmt(p.taken_at)}
-function closeLb(){resetZoom();lt.querySelectorAll("video").forEach(v=>v.pause());lb.hidden=true;document.body.style.overflow="";const v=viewers.find(v=>v.name===lName);v&&v.sync(lk)}
+function closeLb(){resetZoom();lt.querySelectorAll("video").forEach(v=>v.pause());lb.hidden=true;document.body.style.overflow="";}
 lt.addEventListener("scroll",()=>{const k=Math.round(lt.scrollLeft/lt.clientWidth);if(k!==lk)lbShow(k)},{passive:true});
 document.getElementById("lbClose").onclick=closeLb;
 addEventListener("keydown",e=>{if(lb.hidden)return;if(e.key==="Escape")closeLb();
@@ -351,7 +312,7 @@ document.getElementById("rooms").addEventListener("change",async e=>{
  if(!editKey)return;const el=e.target;
  if(el.dataset.note!==undefined){try{await edit({action:"room_note",name:el.dataset.note,note:el.value});const r=ROOMS.find(r=>r.name===el.dataset.note);if(r)r.note=el.value;status("Saved","ok")}catch(err){status("That didn't save. Check your connection and try again.","err")}return}
  const f=el.dataset.f;if(!f)return;const id=el.closest(".it").dataset.id;
- try{const {row}=await edit({action:"update",id,patch:{[f]:el.value}});const i=PHOTOS.findIndex(p=>p.id===id);PHOTOS[i]=row;status(f==="room"?`Moved to ${row.room||OTHER}`:"Saved","ok");if(f!=="caption")rerender();else{const it=el.closest(".it");it.querySelector(".tx p").textContent=row.caption||"No caption yet"}}
+ try{const {row}=await edit({action:"update",id,patch:{[f]:el.value}});const i=PHOTOS.findIndex(p=>p.id===id);PHOTOS[i]=row;status(f==="room"?`Moved to ${row.room||OTHER}`:"Saved","ok");if(f!=="caption")rerender();else{const it=el.closest(".it");it.querySelector(".captext").textContent=row.caption||"No caption yet"}}
  catch(err){status("That didn't save. Check your connection and try again.","err")}
 });
 document.getElementById("rooms").addEventListener("click",async e=>{
