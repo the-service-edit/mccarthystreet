@@ -117,6 +117,7 @@ footer{background:var(--green);color:var(--on-green-muted);font-size:14px}
 footer .wrap{padding-block:28px 36px;display:grid;gap:8px}
 footer p{margin:0;max-width:70ch}
 footer strong{color:var(--on-green)}
+.owner{all:unset;cursor:pointer;font-size:12.5px;text-decoration:underline;opacity:.75}
 
 .lb{position:fixed;inset:0;background:var(--shade);z-index:20;display:grid;grid-template-rows:auto 1fr auto;color:#eef3f0}
 .lbtop{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;gap:12px}
@@ -170,6 +171,7 @@ footer strong{color:var(--on-green)}
 <footer><div class="wrap">
   <p><strong>About this record.</strong> Captions describe each area as found at the start of the tenancy. "Not clean at handover" marks areas that were not reasonably clean when the property was handed over and had to be cleaned; "Damage / repair" marks existing defects; "General condition" records the overall state.</p>
   <p>The original photo and video files, with their capture data, were supplied with the covering email.</p>
+  <p><button type="button" id="ownerlogin" class="owner">Owner login</button></p>
 </div></footer>
 
 <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Full-screen viewer">
@@ -396,14 +398,15 @@ async function startEdit(){
 
 (async()=>{
  const h=location.hash.match(/^#edit=([A-Za-z0-9_-]{10,})$/);
- if(h){editKey=h[1];try{localStorage.setItem("mccarthy-edit-key",editKey)}catch(e){}history.replaceState(null,"",location.pathname)}
+ if(h){editKey=h[1];try{localStorage.setItem("mccarthy-edit-key",editKey)}catch(e){}}
  else if(new URLSearchParams(location.search).has("view")){editKey=null}
  else{try{editKey=localStorage.getItem("mccarthy-edit-key")}catch(e){}}
  document.getElementById("viewlink").href=location.pathname+"?view";
+ document.getElementById("ownerlogin").onclick=()=>{const k=(prompt("Enter your edit key")||"").trim();if(k){location.href=location.pathname+"#edit="+encodeURIComponent(k);location.reload()}};
  try{await load()}catch(e){document.getElementById("rooms").innerHTML='<p class="loading">The photos could not load. Check your connection and refresh the page.</p>';return}
  if(editKey)await startEdit();
  render();
- const t=location.hash.slice(1);if(t){const el=document.getElementById(t);el&&el.scrollIntoView()}
+ const t=location.hash.slice(1);if(t&&!t.startsWith("edit=")){const el=document.getElementById(t);el&&el.scrollIntoView()}
 })();
 </script>
 </body>
