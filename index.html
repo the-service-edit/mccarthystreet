@@ -170,7 +170,7 @@ footer strong{color:var(--on-green)}
 <div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Full-screen viewer">
   <div class="lbtop"><span id="lbCount"></span><button class="lbx" id="lbClose" type="button">Close</button></div>
   <div class="lbtrack" id="lbTrack"></div>
-  <div class="lbcap"><p id="lbText"></p><span class="stamp" id="lbStamp"></span><span class="zhint" id="zhint">Pinch, double-tap or scroll to zoom. Drag to move around.</span></div>
+  <div class="lbcap"><p id="lbText"></p><span class="stamp" id="lbStamp"></span><span class="zhint" id="zhint">Tap the photo to zoom in 3×, tap again to zoom out. Pinch, scroll or use + / − for more. Drag to move around.</span></div>
   <div class="zbar"><button type="button" id="zout" aria-label="Zoom out">−</button><button type="button" id="zin" aria-label="Zoom in">+</button></div>
 </div>
 
@@ -286,24 +286,25 @@ function apply(){if(!Z.img)return;Z.img.style.transform=`translate(${Z.x}px,${Z.
 function bind(){const sl=curSlide();const img=sl&&sl.querySelector("img");if(img!==Z.img){if(Z.img)Z.img.style.transform="";Z.img=img;Z.slide=sl;Z.s=1;Z.x=0;Z.y=0}return !!img}
 function clamp(){const w=Z.img.offsetWidth,h=Z.img.offsetHeight,sw=w*Z.s,sh=h*Z.s;
  Z.x=Math.min(0,Math.max(w-sw,Z.x));Z.y=Math.min(0,Math.max(h-sh,Z.y));if(Z.s<=1){Z.s=1;Z.x=0;Z.y=0}}
-function zoomAt(ns,cx,cy){if(!bind())return;const r=Z.img.getBoundingClientRect();ns=Math.max(1,Math.min(6,ns));
+function zoomAt(ns,cx,cy){if(!bind())return;const r=Z.img.getBoundingClientRect();ns=Math.max(1,Math.min(8,ns));
  const ix=(cx-r.left)/Z.s,iy=(cy-r.top)/Z.s; // the point under the cursor, in unzoomed image pixels
  const left0=r.left-Z.x,top0=r.top-Z.y;Z.x=cx-left0-ix*ns;Z.y=cy-top0-iy*ns;Z.s=ns;clamp();apply()}
 function resetZoom(){if(Z.img){Z.s=1;Z.x=0;Z.y=0;Z.img.style.transform="";Z.slide&&Z.slide.classList.remove("zoomed")}lt.classList.remove("locked");Z.img=null;Z.slide=null}
 const centre=()=>{const sl=curSlide();const r=sl.getBoundingClientRect();return[r.left+r.width/2,r.top+r.height/2]};
-document.getElementById("zin").onclick=()=>{bind();zoomAt(Z.s*1.6,...centre())};
+document.getElementById("zin").onclick=()=>{bind();zoomAt(Math.max(2,Z.s*1.6),...centre())};
 document.getElementById("zout").onclick=()=>{bind();zoomAt(Z.s/1.6,...centre())};
-lt.addEventListener("dblclick",e=>{if(!e.target.closest("img"))return;bind();zoomAt(Z.s>1.01?1:2.5,e.clientX,e.clientY)});
 lt.addEventListener("wheel",e=>{if(!e.target.closest("img"))return;e.preventDefault();bind();zoomAt(Z.s*Math.exp(-e.deltaY*0.0025),e.clientX,e.clientY)},{passive:false});
-const pts=new Map();let pinch=null,pan=null,lastTap=0;
+const pts=new Map();let pinch=null,pan=null,tap=null;
 lt.addEventListener("pointerdown",e=>{if(!e.target.closest("img"))return;bind();pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
- if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),s:Z.s};pan=null}
- else if(pts.size===1){if(e.pointerType==="touch"){const now=Date.now();if(now-lastTap<300){zoomAt(Z.s>1.01?1:2.5,e.clientX,e.clientY);lastTap=0;return}lastTap=now}
+ if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),s:Z.s};pan=null;tap=null}
+ else if(pts.size===1){tap={x:e.clientX,y:e.clientY,t:Date.now()};
   if(Z.s>1.01){pan={x:e.clientX,y:e.clientY,ox:Z.x,oy:Z.y};e.target.setPointerCapture&&e.target.setPointerCapture(e.pointerId)}}});
 lt.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(pinch&&pts.size===2){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);zoomAt(pinch.s*d/pinch.d,(a.x+b.x)/2,(a.y+b.y)/2);e.preventDefault()}
  else if(pan){Z.x=pan.ox+(e.clientX-pan.x);Z.y=pan.oy+(e.clientY-pan.y);clamp();apply();e.preventDefault()}},{passive:false});
-const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)pan=null};
+const up=e=>{const single=pts.size===1;pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)pan=null;
+ if(e.type==='pointerup'&&single&&tap&&Date.now()-tap.t<350&&Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<8&&e.target.closest('img')){bind();zoomAt(Z.s>1.01?1:3,e.clientX,e.clientY)}
+ if(!pts.size)tap=null};
 lt.addEventListener("pointerup",up);lt.addEventListener("pointercancel",up);
 
 /* ---------- Editing ---------- */
