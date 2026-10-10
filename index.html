@@ -350,27 +350,32 @@ async function putFile(blob,name,ext,type){
  if(!r.ok)throw new Error("upload");return s.path}
 document.getElementById("upfile").addEventListener("change",async e=>{
  const files=[...e.target.files];e.target.value="";if(!files.length)return;
- const room=document.getElementById("uproom").value||null;let ok=0;const failed=[];
+ const room=document.getElementById("uproom").value||null;let ok=0,skipped=0;const failed=[];
+ const known=new Set(PHOTOS.map(p=>p.file.toLowerCase()));
+ const knownTimes=new Set(PHOTOS.filter(p=>p.taken_at&&!p.is_video).map(p=>new Date(p.taken_at).getTime()));
  for(const [i,f] of files.entries()){
   status(`Uploading ${i+1} of ${files.length}…`);
   try{
    const base=f.name.replace(/\.[^.]+$/,""),ext=(f.name.split(".").pop()||"").toLowerCase();
+   if(/^img_\d+/i.test(base)&&known.has(base.toLowerCase())){skipped++;continue}
    const isVideo=f.type.startsWith("video")||["mov","mp4","m4v"].includes(ext);
    let path,poster=null,taken=null;
    if(isVideo){
     path=await putFile(f,base,ext||"mp4",f.type||"video/quicktime");
     const pb=await posterFor(f);if(pb)poster=await putFile(pb,base+"-poster","jpg","image/jpeg");
    }else{
-    taken=await exifDate(f);const small=await shrink(f);
+    taken=await exifDate(f);if(taken&&knownTimes.has(new Date(taken).getTime())){skipped++;continue}
+    const small=await shrink(f);
     path=small?await putFile(small,base,"jpg","image/jpeg"):await putFile(f,base,ext||"jpg",f.type||"application/octet-stream");
    }
    if(!taken&&f.lastModified)taken=new Date(f.lastModified).toISOString();
    const {row}=await edit({action:"create",row:{id:path,file:base,path,poster,caption:"",tag:"clean",room,taken_at:taken,is_video:isVideo}});
-   PHOTOS.push(row);ok++;
+   PHOTOS.push(row);ok++;known.add(base.toLowerCase());if(taken&&!isVideo)knownTimes.add(new Date(taken).getTime());
   }catch(err){failed.push(f.name)}
  }
  PHOTOS.sort((a,b)=>(a.taken_at||"9")<(b.taken_at||"9")?-1:1);
- status(failed.length?`Added ${ok}. These didn't upload: ${failed.join(", ")}. Try them again.`:`Added ${ok} ${ok===1?"file":"files"}${room?` to ${room}`:""}. Add a caption to each.`,failed.length?"err":"ok");
+ const skip=skipped?` Skipped ${skipped} already in the record.`:"";
+ status(failed.length?`Added ${ok}.${skip} These didn't upload: ${failed.join(", ")}. Try them again.`:`Added ${ok} ${ok===1?"file":"files"}${room?` to ${room}`:""}.${skip}${ok?" Add a caption to each.":""}`,failed.length?"err":"ok");
  render();const target=document.getElementById(slug(room||OTHER));target&&target.scrollIntoView({behavior:"smooth"});
 });
 
