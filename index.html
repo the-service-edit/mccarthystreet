@@ -108,6 +108,11 @@ main .wrap{display:grid;gap:56px;padding-block:40px 64px}
 .zoomtag{position:absolute;right:10px;bottom:10px;display:inline-flex;gap:6px;align-items:center;background:rgba(255,255,255,.9);color:var(--ink);font-size:12.5px;font-weight:700;padding:5px 10px;border-radius:999px}
 .it .body{padding:12px 14px 14px;display:grid;gap:8px}
 .captext{margin:0;font-weight:600;font-size:15px;line-height:1.4}
+.rright{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.add{position:relative;display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#fff;border-radius:12px;padding:10px 16px;font-weight:800;font-size:15px;cursor:pointer;min-height:44px}
+.add input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.add:focus-within{outline:3px solid #2e8b62;outline-offset:2px}
+.add.big{justify-content:center;width:100%;padding:28px 16px;font-size:17px;border-radius:16px;background:var(--card);color:var(--green);border:2px dashed var(--green)}
 footer{background:var(--green);color:var(--on-green-muted);font-size:14px}
 footer .wrap{padding-block:28px 36px;display:grid;gap:8px}
 footer p{margin:0;max-width:70ch}
@@ -232,8 +237,9 @@ function roomSection(g){
  const sec=document.createElement("section");sec.className="room"+(g.other?" other":"");sec.id=slug(g.name);
  const items=g.items,n=k=>items.filter(p=>p.tag===k&&!p.removed).length,vids=items.filter(p=>p.is_video).length;
  const dates=[...new Set(items.filter(p=>p.taken_at).map(p=>new Date(p.taken_at).toLocaleDateString("en-AU",{day:"numeric",timeZone:"Australia/Perth"})))];
- const head=`<div class="rhead"><h2>${esc(g.name)}${g.other&&editKey?" (needs a room)":""}</h2><span class="when">${dates.length?"Taken "+dates.join(", ")+" Oct 2026":""}</span></div>`;
- if(!items.length){sec.innerHTML=head+`<p class="stamp">No photos in this room yet. Choose it in the upload menu above to add some.</p>`;return sec}
+ const addBtn=(big)=>editKey&&!g.other?`<label class="add${big?" big":""}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>${big?`Add photos to ${esc(g.name)}`:"Add photos"}<input type="file" accept="image/*,video/*" multiple data-addroom="${esc(g.name)}"></label>`:"";
+ const head=`<div class="rhead"><h2>${esc(g.name)}${g.other&&editKey?" (needs a room)":""}</h2><div class="rright"><span class="when">${dates.length?"Taken "+dates.join(", ")+" Oct 2026":""}</span>${items.length?addBtn(false):""}</div></div>`;
+ if(!items.length){sec.innerHTML=head+(editKey?addBtn(true):`<p class="stamp">No photos in this room.</p>`);return sec}
  const roomOpts=k=>["",...ROOMS.map(r=>r.name)].map(r=>`<option value="${esc(r)}"${r===(k||"")?" selected":""}>${r?esc(r):"Choose room"}</option>`).join("");
  sec.innerHTML=head+`
   <div class="rtop">
@@ -348,9 +354,9 @@ async function putFile(blob,name,ext,type){
  const s=await edit({action:"sign_upload",name,ext});
  const r=await fetch(s.signedUrl.startsWith("http")?s.signedUrl:`${SB}/storage/v1${s.signedUrl}`,{method:"PUT",headers:{"content-type":type,"x-upsert":"false"},body:blob});
  if(!r.ok)throw new Error("upload");return s.path}
-document.getElementById("upfile").addEventListener("change",async e=>{
- const files=[...e.target.files];e.target.value="";if(!files.length)return;
- const room=document.getElementById("uproom").value||null;let ok=0,skipped=0;const failed=[];
+document.getElementById("upfile").addEventListener("change",e=>{const files=[...e.target.files];e.target.value="";uploadFiles(files,document.getElementById("uproom").value||null)});
+async function uploadFiles(files,room){
+ if(!files.length)return;status(`Starting upload of ${files.length}…`);document.getElementById("editbar").scrollIntoView({block:"nearest"});let ok=0,skipped=0;const failed=[];
  const known=new Set(PHOTOS.map(p=>p.file.toLowerCase()));
  const knownTimes=new Set(PHOTOS.filter(p=>p.taken_at&&!p.is_video).map(p=>new Date(p.taken_at).getTime()));
  for(const [i,f] of files.entries()){
@@ -377,7 +383,8 @@ document.getElementById("upfile").addEventListener("change",async e=>{
  const skip=skipped?` Skipped ${skipped} already in the record.`:"";
  status(failed.length?`Added ${ok}.${skip} These didn't upload: ${failed.join(", ")}. Try them again.`:`Added ${ok} ${ok===1?"file":"files"}${room?` to ${room}`:""}.${skip}${ok?" Add a caption to each.":""}`,failed.length?"err":"ok");
  render();const target=document.getElementById(slug(room||OTHER));target&&target.scrollIntoView({behavior:"smooth"});
-});
+}
+document.getElementById("rooms").addEventListener("change",e=>{const inp=e.target.closest("input[data-addroom]");if(!inp)return;const files=[...inp.files];inp.value="";uploadFiles(files,inp.dataset.addroom||null)});
 
 async function startEdit(){
  document.getElementById("editbar").hidden=false;
