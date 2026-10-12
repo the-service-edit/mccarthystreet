@@ -113,6 +113,18 @@ main .wrap{display:grid;gap:56px;padding-block:40px 64px}
 .add input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
 .add:focus-within{outline:3px solid #2e8b62;outline-offset:2px}
 .add.big{justify-content:center;width:100%;padding:28px 16px;font-size:17px;border-radius:16px;background:var(--card);color:var(--green);border:2px dashed var(--green)}
+.uppanel{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:15;max-width:520px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:14px 16px;display:grid;gap:8px;max-height:60vh;overflow:auto}
+.uphead{display:flex;justify-content:space-between;align-items:center}
+.uphead strong{font-size:16px}
+.upx{border:1px solid var(--line);background:var(--page);border-radius:10px;padding:6px 12px;font-weight:700;cursor:pointer}
+.upsub{margin:0;font-size:14px;color:var(--muted)}
+.uplist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.uplist li{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
+.uplist img,.uplist .vid{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--line);flex:none;display:grid;place-items:center;font-size:9px;font-weight:800;color:var(--muted)}
+.uplist li.ok span:last-child{color:var(--ok)}
+.uplist li.fail span:last-child{color:var(--warn)}
+.uplist li.skip span:last-child{color:var(--muted)}
+.it.fresh{border-color:var(--green);box-shadow:0 0 0 3px rgba(15,70,50,.25)}
 footer{background:var(--green);color:var(--on-green-muted);font-size:14px}
 footer .wrap{padding-block:28px 36px;display:grid;gap:8px}
 footer p{margin:0;max-width:70ch}
@@ -166,6 +178,7 @@ footer strong{color:var(--on-green)}
   </div>
 </section>
 
+<div class="uppanel" id="uppanel" hidden role="status" aria-live="polite"></div>
 <nav class="nav" aria-label="Rooms"><div class="wrap" id="nav"></div></nav>
 <main><div class="wrap" id="rooms"><p class="loading">Loading photos…</p></div></main>
 <footer><div class="wrap">
@@ -357,34 +370,50 @@ async function putFile(blob,name,ext,type){
  const r=await fetch(s.signedUrl.startsWith("http")?s.signedUrl:`${SB}/storage/v1${s.signedUrl}`,{method:"PUT",headers:{"content-type":type,"x-upsert":"false"},body:blob});
  if(!r.ok)throw new Error("upload");return s.path}
 document.getElementById("upfile").addEventListener("change",e=>{const files=[...e.target.files];e.target.value="";uploadFiles(files,document.getElementById("uproom").value||null)});
+function logEv(event,detail){if(!editKey)return;try{edit({action:"log",event,detail:{...detail,ua:navigator.userAgent.slice(0,140)}}).catch(()=>{})}catch(e){}}
+addEventListener("error",e=>logEv("page_error",{msg:String(e.message||"").slice(0,300)}));
+addEventListener("unhandledrejection",e=>logEv("page_rejection",{msg:String(e.reason&&e.reason.message||e.reason||"").slice(0,300)}));
+const upPanel=document.getElementById("uppanel");
+function panel(html,done){upPanel.hidden=false;upPanel.innerHTML=`<div class="uphead"><strong>${done?"Upload finished":"Uploading…"}</strong>${done?'<button type="button" class="upx" id="upclose">Close</button>':""}</div>${html}`;const c=document.getElementById("upclose");if(c)c.onclick=()=>{upPanel.hidden=true}}
 async function uploadFiles(files,room){
- if(!files.length)return;status(`Starting upload of ${files.length}…`);document.getElementById("editbar").scrollIntoView({block:"nearest"});let ok=0,skipped=0;const failed=[];
+ if(!files.length)return;
+ const rows=files.map(f=>({f,state:"Waiting",cls:""}));
+ const thumbs=files.map(f=>{try{return URL.createObjectURL(f)}catch(e){return""}});
+ const draw=done=>panel(`<p class="upsub">${room?`Adding to <b>${esc(room)}</b>`:"No room chosen yet"}</p><ul class="uplist">${rows.map((r,i)=>`<li class="${r.cls}">${thumbs[i]&&!/video/.test(r.f.type)?`<img src="${thumbs[i]}" alt="">`:`<span class="vid">${/video/.test(r.f.type)?"VIDEO":"FILE"}</span>`}<span>${esc(r.state)}</span></li>`).join("")}</ul>${done?`<p class="upsub">${done}</p>`:""}`,!!done);
+ draw();logEv("upload_start",{count:files.length,room,types:files.map(f=>f.type+"|"+f.size).slice(0,20)});
+ let ok=0,skipped=0,failed=0;const added=[];
  const known=new Set(PHOTOS.map(p=>p.file.toLowerCase()));
  const knownTimes=new Set(PHOTOS.filter(p=>p.taken_at&&!p.is_video).map(p=>new Date(p.taken_at).getTime()));
  for(const [i,f] of files.entries()){
-  status(`Uploading ${i+1} of ${files.length}…`);
+  const r=rows[i];let stage="start";r.state="Uploading…";draw();
   try{
-   const base=f.name.replace(/\.[^.]+$/,""),ext=(f.name.split(".").pop()||"").toLowerCase();
-   if(/^img_\d+/i.test(base)&&known.has(base.toLowerCase())){skipped++;continue}
-   const isVideo=f.type.startsWith("video")||["mov","mp4","m4v"].includes(ext);
+   const base=(f.name||"photo").replace(/\.[^.]+$/,""),ext=((f.name||"").split(".").pop()||"").toLowerCase();
+   if(/^img_\d+/i.test(base)&&known.has(base.toLowerCase())){skipped++;r.state="Already in the record";r.cls="skip";draw();continue}
+   const isVideo=(f.type||"").startsWith("video")||["mov","mp4","m4v"].includes(ext);
    let path,poster=null,taken=null;
    if(isVideo){
-    path=await putFile(f,base,ext||"mp4",f.type||"video/quicktime");
-    const pb=await posterFor(f);if(pb)poster=await putFile(pb,base+"-poster","jpg","image/jpeg");
+    stage="video_upload";path=await putFile(f,base,ext||"mp4",f.type||"video/quicktime");
+    stage="poster";const pb=await posterFor(f);if(pb)poster=await putFile(pb,base+"-poster","jpg","image/jpeg");
    }else{
-    taken=await exifDate(f);if(taken&&knownTimes.has(new Date(taken).getTime())){skipped++;continue}
-    const small=await shrink(f);
-    path=small?await putFile(small,base,"jpg","image/jpeg"):await putFile(f,base,ext||"jpg",f.type||"application/octet-stream");
+    stage="exif";taken=await exifDate(f);if(taken&&knownTimes.has(new Date(taken).getTime())){skipped++;r.state="Already in the record";r.cls="skip";draw();continue}
+    stage="resize";const small=await shrink(f);
+    stage="photo_upload";path=small?await putFile(small,base,"jpg","image/jpeg"):await putFile(f,base,ext||"jpg",f.type||"application/octet-stream");
    }
    if(!taken&&f.lastModified)taken=new Date(f.lastModified).toISOString();
-   const {row}=await edit({action:"create",row:{id:path,file:base,path,poster,caption:"",tag:"clean",room,taken_at:taken,is_video:isVideo}});
-   PHOTOS.push(row);ok++;known.add(base.toLowerCase());if(taken&&!isVideo)knownTimes.add(new Date(taken).getTime());
-  }catch(err){failed.push(f.name)}
+   stage="save";const {row}=await edit({action:"create",row:{id:path,file:base,path,poster,caption:"",tag:"clean",room,taken_at:taken,is_video:isVideo}});
+   PHOTOS.push(row);added.push(row.id);ok++;known.add(base.toLowerCase());if(taken&&!isVideo)knownTimes.add(new Date(taken).getTime());
+   r.state="Saved";r.cls="ok";draw();
+  }catch(err){failed++;r.state="Didn't upload. Try again.";r.cls="fail";draw();logEv("upload_fail",{stage,name:f.name,type:f.type,size:f.size,msg:String(err&&err.message||err).slice(0,300)})}
  }
  PHOTOS.sort((a,b)=>(a.taken_at||"9")<(b.taken_at||"9")?-1:1);
- const skip=skipped?` Skipped ${skipped} already in the record.`:"";
- status(failed.length?`Added ${ok}.${skip} These didn't upload: ${failed.join(", ")}. Try them again.`:`Added ${ok} ${ok===1?"file":"files"}${room?` to ${room}`:""}.${skip}${ok?" Add a caption to each.":""}`,failed.length?"err":"ok");
- render();const target=document.getElementById(slug(room||OTHER));target&&target.scrollIntoView({behavior:"smooth"});
+ logEv("upload_done",{ok,skipped,failed,room});
+ const parts=[];if(ok)parts.push(`${ok} saved${room?` to ${esc(room)}`:""}`);if(skipped)parts.push(`${skipped} already in the record, so skipped`);if(failed)parts.push(`${failed} didn't upload`);
+ draw((parts.join(" · ")||"Nothing new to add")+(ok?". Add a caption to each new photo (highlighted).":""));
+ render();
+ if(added.length){const first=document.querySelector(`.it[data-id="${CSS.escape(added[0])}"]`);
+  added.forEach(id=>{const el=document.querySelector(`.it[data-id="${CSS.escape(id)}"]`);el&&el.classList.add("fresh")});
+  if(first){first.scrollIntoView({behavior:"smooth",block:"center"});const t=first.querySelector('textarea[data-f="caption"]');t&&setTimeout(()=>t.focus({preventScroll:true}),600)}}
+ setTimeout(()=>thumbs.forEach(u=>u&&URL.revokeObjectURL(u)),60000);
 }
 document.getElementById("rooms").addEventListener("change",e=>{const inp=e.target.closest("input[data-addroom]");if(!inp)return;const files=[...inp.files];inp.value="";uploadFiles(files,inp.dataset.addroom||null)});
 
